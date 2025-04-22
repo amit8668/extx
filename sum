@@ -1,0 +1,311 @@
+
+EXP1
+
+import cv2
+import numpy as np
+
+# Load the image
+image_path = "image locaion"  # Change to your image file
+original_image = cv2.imread(image_path)
+
+# Resize the image
+height = 500  # Specify desired height
+width = int(original_image.shape[1] * (height / original_image.shape[0]))  
+resized_image = cv2.resize(original_image, (width, height))
+
+# Convert to grayscale
+gray_image = cv2.cvtColor(resized_image, cv2.COLOR_BGR2GRAY)
+
+# Define thresholds for gray level slicing
+min_val, max_val = 100, 150
+sliced_img = np.zeros_like(gray_image)
+sliced_img[(gray_image >= min_val) & (gray_image <= max_val)] = 255
+
+# Negative transformation
+negative_image = 255 - gray_image
+
+# Logarithmic transformation
+gray_image_log = np.log1p(np.float32(gray_image))  # Apply log transform
+gray_image_log = np.uint8(255 * (gray_image_log / np.max(gray_image_log)))  
+
+# Display images
+cv2.imshow("Original Color Image (Resized)", resized_image)
+cv2.imshow("Original Grayscale Image", gray_image)
+cv2.imshow("Gray Level Sliced Image", sliced_img)
+cv2.imshow("Negative Image", negative_image)
+cv2.imshow("Logarithmic Transformed Image", gray_image_log)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# Save processed images
+cv2.imwrite("original_resized_image.png", resized_image)
+cv2.imwrite("grayscale_image.png", gray_image)
+cv2.imwrite("sliced_image.png", sliced_img)
+cv2.imwrite("negative_image.png", negative_image)
+cv2.imwrite("log_transformed_image.png", gray_image_log)
+
+
+
+EXP2
+
+import numpy as np
+import cv2
+
+# Read the input image in grayscale
+img1 = cv2.imread("C:\\Users\\mansu\\Downloads\\be6e.jpg", 0)
+
+# Obtain the number of rows and columns of the image
+m, n = img1.shape
+
+# Develop Averaging filter (3x3 mask)
+mask = np.ones((3, 3))
+mask = mask / 9
+
+# Convolve the 3x3 mask over the image
+img_new = np.zeros((m, n))
+
+for i in range(1, m - 1):
+    for j in range(1, n - 1):
+        temp = (img1[i-1, j-1]*mask[0, 0] + img1[i-1, j]*mask[0, 1] + img1[i-1, j+1]*mask[0, 2] +
+                img1[i, j-1]*mask[1, 0] + img1[i, j]*mask[1, 1] + img1[i, j+1]*mask[1, 2] +
+                img1[i+1, j-1]*mask[2, 0] + img1[i+1, j]*mask[2, 1] + img1[i+1, j+1]*mask[2, 2])
+        img_new[i, j] = temp
+
+# Convert the resulting image into uint8 format
+img_new = img_new.astype(np.uint8)
+
+# Display the input and output images
+cv2.imshow('Input Image', img1)
+cv2.imshow('LPF Image', img_new)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
+EXP 3
+
+EXP 4
+
+import numpy as np
+import matplotlib.pyplot as plt
+import cv2
+
+img = cv2.imread("C:\\Users\\mansu\\Downloads\\be6e.jpg", 0)
+if img is None:
+    print("Error: Image not found.")
+    exit()
+
+cv2.imshow('Input Image', img)
+
+hist, bins = np.histogram(img.flatten(), 256, [0, 255])
+cdf = hist.cumsum()
+cdf_normalized = cdf * float(hist.max()) / cdf.max()
+
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1)
+plt.plot(cdf_normalized, color='b')
+plt.hist(img.flatten(), 256, [0, 256], color='r')
+plt.xlim([0, 255])
+plt.title('Original Image Histogram and CDF')
+plt.legend(('CDF', 'Histogram'), loc='upper left')
+
+equ = cv2.equalizeHist(img)
+hist_eq, bins_eq = np.histogram(equ.flatten(), 256, [0, 255])
+cdf_eq = hist_eq.cumsum()
+cdf_eq_normalized = cdf_eq * float(hist_eq.max()) / cdf_eq.max()
+
+plt.subplot(1, 2, 2)
+plt.plot(cdf_eq_normalized, color='b')
+plt.hist(equ.flatten(), 256, [0, 256], color='r')
+plt.xlim([0, 255])
+plt.title('Equalized Image Histogram and CDF')
+plt.legend(('CDF', 'Histogram'), loc='upper left')
+
+cv2.imshow('Equalized Image', equ)
+plt.show()
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
+EXP5
+
+part1
+
+import cv2
+
+image_path = "C:\\Users\\mansu\\Downloads\\be6e.jpg"
+img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+
+if img is None:
+    print(f"Error: Unable to open image file at {image_path}")
+    exit()
+
+new_width, new_height = 400, 200
+img_resized = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+img_blur = cv2.GaussianBlur(img_resized, (3, 3), 0)
+
+sobel_x = cv2.Sobel(img_blur, cv2.CV_64F, 1, 0, ksize=3)
+sobel_x = cv2.convertScaleAbs(sobel_x)
+
+sobel_y = cv2.Sobel(img_blur, cv2.CV_64F, 0, 1, ksize=3)
+sobel_y = cv2.convertScaleAbs(sobel_y)
+
+sobel_combined = cv2.addWeighted(sobel_x, 0.5, sobel_y, 0.5, 0)
+
+cv2.imshow("Original Image", img_resized)
+cv2.imshow("Horizontal Edges (Sobel X)", sobel_x)
+cv2.imshow("Vertical Edges (Sobel Y)", sobel_y)
+cv2.imshow("Combined Edges (Sobel X + Y)", sobel_combined)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+part2
+
+
+import numpy as np
+import cv2
+
+# Load the image in grayscale
+img1 = cv2.imread('C:\\Users\\mansu\\Downloads\\be6e.jpg', 0)
+
+# Apply Gaussian blur to reduce noise (optional, but often recommended for Canny)
+blurred_image = cv2.GaussianBlur(img1, (5, 5), 0)
+
+# Perform Canny edge detection
+lower_threshold = 100  # Lower threshold for edge linking
+upper_threshold = 200  # Upper threshold for edge linking
+canny_edges = cv2.Canny(blurred_image, lower_threshold, upper_threshold)
+
+# Display the images
+cv2.imshow('Input Image', img1)
+cv2.imshow('Canny Edge Detection', canny_edges)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
+EXP6
+
+import numpy as np
+import cv2
+
+img = cv2.imread("C:\\Users\\mansu\\Downloads\\be6e.jpg", 0)
+cv2.imshow('p', img)
+
+m, n = img.shape
+
+cropped_image = img[100:250, 50:350]
+cv2.imshow('cropped', cropped_image)
+
+down_width = 100
+down_height = 100
+down_points = (down_width, down_height)
+resized_down = cv2.resize(img, down_points, interpolation=cv2.INTER_LINEAR)
+
+up_width = 400
+up_height = 400
+up_points = (up_width, up_height)
+resized_up = cv2.resize(img, up_points, interpolation=cv2.INTER_LINEAR)
+
+cv2.imshow("resize down", resized_down)
+cv2.imshow("resize up", resized_up)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+
+EXP 7
+
+import cv2
+import numpy as np
+
+img = cv2.imread('C:\\Users\\mansu\\Downloads\\be6e.jpg', 0)
+kernel = np.ones((5, 5), np.uint8)
+
+img_erosion = cv2.erode(img, kernel, iterations=1)
+img_dilation = cv2.dilate(img, kernel, iterations=1)
+img_opening = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+img_closing = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel)
+
+cv2.imshow("Original", img)
+cv2.imshow("Erosion", img_erosion)
+cv2.imshow("Dilation", img_dilation)
+cv2.imshow("Opening", img_opening)
+cv2.imshow("Closing", img_closing)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+EXP 8
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+from skimage import color
+from skimage.filters import threshold_otsu, threshold_local
+
+page_image = cv2.imread('/home/computer/Desktop/images.jpeg')
+
+page_image = cv2.cvtColor(page_image, cv2.COLOR_BGR2GRAY)
+
+global_thresh = threshold_otsu(page_image)
+
+binary_global = page_image > global_thresh
+
+plt.figure(figsize=(6, 6))
+plt.imshow(binary_global, cmap='gray')
+plt.title('Global Thresholding')
+plt.axis('off')
+plt.show()
+
+block_size = 35
+
+local_thresh = threshold_local(page_image, block_size, offset=0.1)
+
+binary_local = page_image > local_thresh
+
+plt.figure(figsize=(6, 6))
+plt.imshow(binary_local, cmap='gray')
+plt.title('Local Thresholding')
+plt.axis('off')
+plt.show()
+
+exp9
+
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+
+x = [8, 10, 12, 8, 6, 22, 28, 12, 20, 24]
+y = [42, 38, 90, 34, 32, 50, 48, 44, 42, 21]
+
+plt.scatter(x, y)
+plt.title('Initial Scatter Plot')
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.show()
+
+data = list(zip(x, y))
+inertias = []
+
+for i in range(1, 11):
+    kmeans = KMeans(n_clusters=i)
+    kmeans.fit(data)
+    inertias.append(kmeans.inertia_)
+
+plt.plot(range(1, 11), inertias, marker='o')
+plt.title('Elbow Method')
+plt.xlabel('Number of clusters')
+plt.ylabel('Inertia')
+plt.show()
+
+kmeans = KMeans(n_clusters=3)
+kmeans.fit(data)
+
+plt.scatter(x, y, c=kmeans.labels_)
+plt.title('Clustered Data')
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.show()
+
